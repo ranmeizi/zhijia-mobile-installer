@@ -1,0 +1,4 @@
+# Pinned by the public AidLux bootstrap. Override with GH_VERSION=...
+GH_VERSION=2.97.0
+OK_REPO=kanppa/prontera_ok
+OK_BRANCH=master
