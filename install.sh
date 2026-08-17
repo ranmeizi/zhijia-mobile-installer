@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# 公开一键入口：安装 GitHub CLI，交互登录后克隆私有 prontera_ok，再交给仓库内 deploy/aidlux.sh。
+# 公开一键入口：装 git/curl/perl/python、GitHub CLI 交互登录、克隆私有仓库，
+# 再进入项目用 nvm 装 Node、pnpm install、构建并启动。
 #
 # 必须用 bash -c，不要 curl | bash（管道会占掉 stdin，无法登录）：
 #
@@ -33,26 +34,34 @@ if [[ ! -t 0 ]]; then
 fi
 
 set_apt_cmd() {
-  # Use an array. `printf '%s\n' sudo apt-get` prints two lines; read -a then
-  # becomes `sudo update` and AidLux reports `sudo: update: command not found`.
   if [[ $(id -u) -eq 0 ]]; then
     APT_CMD=(apt-get)
   elif command -v sudo >/dev/null 2>&1; then
     APT_CMD=(sudo apt-get)
   else
-    die "需要 root 或 sudo 才能安装 git/curl"
+    die "需要 root 或 sudo 才能安装系统包"
   fi
 }
 
-ensure_git_curl() {
-  if command -v git >/dev/null 2>&1 && command -v curl >/dev/null 2>&1; then
+ensure_system_packages() {
+  if command -v git >/dev/null 2>&1 && command -v curl >/dev/null 2>&1 && command -v perl >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
+    log "系统已有 git / curl / perl / python3"
     return 0
   fi
-  command -v apt-get >/dev/null 2>&1 || die "需要 git 和 curl"
+  command -v apt-get >/dev/null 2>&1 || die "需要 apt-get 才能安装 git / curl / perl / python3"
   set_apt_cmd
-  log "安装 git / curl / ca-certificates"
+  log "apt 安装 git / curl / perl / python3 / 编译链"
   "${APT_CMD[@]}" update -y
-  "${APT_CMD[@]}" install -y --no-install-recommends git curl ca-certificates
+  "${APT_CMD[@]}" install -y --no-install-recommends \
+    git curl ca-certificates xz-utils tar \
+    build-essential make \
+    python3 python3-dev \
+    perl libperl-dev
+  hash -r || true
+  command -v git >/dev/null 2>&1 || die "找不到 git"
+  command -v curl >/dev/null 2>&1 || die "找不到 curl"
+  command -v perl >/dev/null 2>&1 || die "找不到 perl"
+  command -v python3 >/dev/null 2>&1 || die "找不到 python3"
 }
 
 linux_gh_arch() {
@@ -143,7 +152,8 @@ EOF
 
 clone_private_repo() {
   if [[ -f $OK_REPO_DIR/openkore.pl && -f $OK_REPO_DIR/deploy/aidlux.sh ]]; then
-    log "使用已有仓库 $OK_REPO_DIR"
+    log "使用已有仓库 $OK_REPO_DIR ，拉取最新"
+    git -C "$OK_REPO_DIR" pull --ff-only || warn "git pull 失败，继续使用当前代码"
     return 0
   fi
   if [[ -e $OK_REPO_DIR ]]; then
@@ -154,9 +164,19 @@ clone_private_repo() {
   [[ -f $OK_REPO_DIR/deploy/aidlux.sh ]] || die "克隆结果缺少 deploy/aidlux.sh"
 }
 
-ensure_git_curl
+run_project_install() {
+  [[ -f $OK_REPO_DIR/deploy/aidlux.sh ]] || die "找不到 $OK_REPO_DIR/deploy/aidlux.sh"
+  log "进入 $OK_REPO_DIR ，安装 nvm / Node / pnpm 并构建 ok-terminal"
+  bash "$OK_REPO_DIR/deploy/aidlux.sh" install --start
+}
+
+log "======== 1/4 系统包 git / curl / perl / python3 ========"
+ensure_system_packages
+log "======== 2/4 GitHub CLI ========"
 ensure_gh
+log "======== 3/4 登录并克隆私有仓库 ========"
 ensure_gh_login
 clone_private_repo
-log "开始安装并启动 ok-terminal"
-exec bash "$OK_REPO_DIR/deploy/aidlux.sh" install --start
+log "======== 4/4 进入项目：nvm / Node / pnpm install / 启动 ========"
+run_project_install
+log "一键安装结束"

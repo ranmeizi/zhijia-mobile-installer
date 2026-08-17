@@ -10,12 +10,11 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/ranmeizi/zhijia-mobile-i
 
 脚本会：
 
-1. 安装 `git` / `curl`（若缺失）
-2. 钉死安装 GitHub CLI（`gh` 2.97.0，官方 linux-arm64/amd64 tarball + SHA256）
-3. 运行 `gh auth login`：终端显示一次性代码，用手机浏览器打开 https://github.com/login/device 授权
-4. `gh auth setup-git`，之后 `git pull` 不用再贴 PAT
-5. 克隆私有仓库到 `$HOME/prontera_ok`
-6. 执行仓库内 `deploy/aidlux.sh install --start`
+1. apt 安装 `git` / `curl` / `perl` / `python3` 和编译链
+2. 钉死安装 GitHub CLI（`gh` 2.97.0）
+3. `gh auth login` 设备码登录，克隆私有仓库 `kanppa/prontera_ok`
+4. **进入项目**执行 `deploy/aidlux.sh install --start`：nvm + Node 22、pnpm、`tools/ok_terminal` 的 `pnpm install && pnpm build`，并启动控制台
+
 
 不会自动 `lianji`。默认监听 `0.0.0.0:8787`。
 
