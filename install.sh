@@ -3,7 +3,7 @@
 #
 # 必须用 bash -c，不要 curl | bash（管道会占掉 stdin，无法登录）：
 #
-#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/kanppa/prontera-ok-deploy/main/install.sh)"
+#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/ranmeizi/zhijia-mobile-installer/main/install.sh)"
 #
 set -euo pipefail
 
@@ -29,15 +29,18 @@ fi
 
 if [[ ! -t 0 ]]; then
   die "检测到 curl | bash，无法交互登录 GitHub。请改用:
-  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/kanppa/prontera-ok-deploy/main/install.sh)\""
+  bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/ranmeizi/zhijia-mobile-installer/main/install.sh)\""
 fi
 
-apt_cmd() {
+set_apt_cmd() {
+  # Use an array. `printf '%s\n' sudo apt-get` prints two lines; read -a then
+  # becomes `sudo update` and AidLux reports `sudo: update: command not found`.
   if [[ $(id -u) -eq 0 ]]; then
-    printf '%s\n' apt-get
+    APT_CMD=(apt-get)
+  elif command -v sudo >/dev/null 2>&1; then
+    APT_CMD=(sudo apt-get)
   else
-    command -v sudo >/dev/null 2>&1 || die "需要 root 或 sudo 才能安装 git/curl"
-    printf '%s\n' sudo apt-get
+    die "需要 root 或 sudo 才能安装 git/curl"
   fi
 }
 
@@ -46,11 +49,10 @@ ensure_git_curl() {
     return 0
   fi
   command -v apt-get >/dev/null 2>&1 || die "需要 git 和 curl"
-  local -a apt
-  read -r -a apt <<<"$(apt_cmd)"
+  set_apt_cmd
   log "安装 git / curl / ca-certificates"
-  "${apt[@]}" update -y
-  "${apt[@]}" install -y --no-install-recommends git curl ca-certificates
+  "${APT_CMD[@]}" update -y
+  "${APT_CMD[@]}" install -y --no-install-recommends git curl ca-certificates
 }
 
 linux_gh_arch() {

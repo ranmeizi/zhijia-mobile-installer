@@ -5,7 +5,7 @@
 AidLux 终端里执行（必须用 `bash -c`，不要 `curl | bash`，否则无法交互登录）：
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/kanppa/prontera-ok-deploy/main/install.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/ranmeizi/zhijia-mobile-installer/main/install.sh)"
 ```
 
 脚本会：
@@ -22,5 +22,5 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/kanppa/prontera-ok-deplo
 自定义目录：
 
 ```bash
-OK_REPO_DIR=$HOME/src/prontera_ok bash -c "$(curl -fsSL https://raw.githubusercontent.com/kanppa/prontera-ok-deploy/main/install.sh)"
+OK_REPO_DIR=$HOME/src/prontera_ok bash -c "$(curl -fsSL https://raw.githubusercontent.com/ranmeizi/zhijia-mobile-installer/main/install.sh)"
 ```
